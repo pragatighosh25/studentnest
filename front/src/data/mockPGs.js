@@ -1,0 +1,28 @@
+export const pgList = [
+  {
+    id: "1",
+    name: "Green Nest PG",
+    area: "Salt Lake",
+    city: "Kolkata",
+    rent: 6500,
+    deposit: 10000,
+    gender: "Girls",
+    amenities: ["Wifi", "Food", "Laundry"],
+    images: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2"],
+    verified: true,
+    phone: "9876543210",
+  },
+  {
+    id: "2",
+    name: "Urban Stay",
+    area: "New Town",
+    city: "Kolkata",
+    rent: 7500,
+    deposit: 12000,
+    gender: "Boys",
+    amenities: ["Wifi", "AC"],
+    images: ["https://images.unsplash.com/photo-1598928506311-c55ded91a20c"],
+    verified: false,
+    phone: "9123456789",
+  },
+];
