@@ -5,21 +5,38 @@ const pgSchema = new mongoose.Schema(
     ownerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
     },
-    name: String,
-    city: String,
-    area: String,
-    address: String,
-    gender: String,
-    roomType: String,
-    rent: Number,
-    deposit: Number,
+
+    name: { type: String, required: true },
+    address: { type: String, required: true },
+    city: { type: String, required: true },
+    area: { type: String, required: true },
+
+    rent: { type: Number, required: true },
+    deposit: { type: Number, required: true },
+
+    gender: {
+      type: String,
+      enum: ["Boys", "Girls", "Co-ed"],
+      required: true,
+    },
+
+    roomType: {
+      type: String,
+      enum: ["Single", "Double", "Triple"],
+      required: true,
+    },
+
     amenities: [String],
-    images: [String],
-    active: Boolean,
-    verified: Boolean,
+
+    images: [String], // cloudinary URLs later
+
+    active: { type: Boolean, default: true },
+    verified: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
 
 export default mongoose.model("PG", pgSchema);
+

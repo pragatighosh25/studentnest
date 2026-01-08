@@ -4,6 +4,7 @@ import authRoutes from "./routes/auth.routes.js";
 import ownerRoutes from "./routes/owner.routes.js";
 import pgRoutes from "./routes/pg.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import ownerPGRoutes from "./routes/ownerPG.routes.js";
 
 const app = express();
 
@@ -17,5 +18,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/owner", ownerRoutes);
 app.use("/api/pgs", pgRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/owner", ownerPGRoutes);
 
 export default app;

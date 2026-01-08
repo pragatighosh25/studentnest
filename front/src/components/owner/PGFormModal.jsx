@@ -1,5 +1,6 @@
 import { X, Upload, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { apiFetch } from "../../utils/api";
 
 const AMENITIES = [
   "WiFi",
@@ -101,14 +102,30 @@ export default function PGFormModal({ pg, onClose }) {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!validate()) return;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!validate()) return;
+  try {
+    if (isEdit) {
+      await apiFetch(`/owner/pgs/${pg._id}`, {
+        method: "PATCH",
+        body: JSON.stringify(form),
+      });
+    } else {
+      await apiFetch("/owner/pgs", {
+        method: "POST",
+        body: JSON.stringify(form),
+      });
+    }
 
-    console.log(isEdit ? "UPDATE PG" : "CREATE PG", form);
+    onSuccess(); // refresh table
     onClose();
-  };
+  } catch (err) {
+    console.error(err.message);
+  }
+};
+
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur flex items-center justify-center px-4 overflow-y-auto" onClick={onClose}>
