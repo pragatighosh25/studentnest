@@ -3,6 +3,7 @@ import cors from "cors";
 import authRoutes from "./routes/auth.routes.js";
 import ownerRoutes from "./routes/owner.routes.js";
 import pgRoutes from "./routes/pg.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 
 const app = express();
 

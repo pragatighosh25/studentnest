@@ -1,38 +1,71 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PageWrapper from "../../components/PageWrapper";
+import { apiFetch } from "../../utils/api";
 
 export default function AuthPage() {
   const navigate = useNavigate();
 
-  const [role, setRole] = useState("student"); // student | owner
-  const [mode, setMode] = useState("login"); // login | register
+  // UI state (student | owner)
+  const [role, setRole] = useState("student");
+  const [mode, setMode] = useState("login");
 
+  // form state
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  /* ---------- SUBMIT ---------- */
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    if (!email || !password) return;
+    if (!email || !password) {
+      setError("Email and password are required");
+      return;
+    }
 
     if (mode === "register") {
-      if (!name || password !== confirmPassword) {
-        alert("Passwords do not match");
+      if (!name) {
+        setError("Name is required");
+        return;
+      }
+      if (password !== confirmPassword) {
+        setError("Passwords do not match");
         return;
       }
     }
 
-    // V1 auth mock
-    localStorage.setItem("role", role);
-    localStorage.setItem("name", name || "User");
+    try {
+      const endpoint =
+        mode === "login" ? "/auth/login" : "/auth/register";
 
-    if (role === "owner") {
-      navigate("/owner/dashboard");
-    } else {
-      navigate("/");
+      const payload =
+        mode === "login"
+          ? { email, password }
+          : { name, email, password, role };
+
+      const data = await apiFetch(endpoint, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      // store auth
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      // redirect by role (ADMIN INCLUDED)
+      if (data.user.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (data.user.role === "owner") {
+        navigate("/owner/dashboard");
+      } else {
+        navigate("/");
+      }
+    } catch (err) {
+      setError(err.message || "Authentication failed");
     }
   };
 
@@ -40,7 +73,7 @@ export default function AuthPage() {
     <PageWrapper>
       <section className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex items-center justify-center px-4">
         <div className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 p-6">
-          {/* Role Tabs */}
+          {/* ROLE TABS (NO ADMIN) */}
           <div className="flex mb-4 rounded-xl bg-gray-100 dark:bg-zinc-800 p-1">
             {["student", "owner"].map((r) => (
               <button
@@ -57,7 +90,7 @@ export default function AuthPage() {
             ))}
           </div>
 
-          {/* Login / Register Toggle */}
+          {/* LOGIN / REGISTER */}
           <div className="flex justify-center gap-4 text-sm mb-6">
             {["login", "register"].map((m) => (
               <button
@@ -74,7 +107,7 @@ export default function AuthPage() {
             ))}
           </div>
 
-          {/* Title */}
+          {/* TITLE */}
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 text-center">
             {mode === "login" ? "Welcome back" : "Create your account"}
           </h2>
@@ -89,7 +122,7 @@ export default function AuthPage() {
               : "Register to start finding PGs easily"}
           </p>
 
-          {/* Form */}
+          {/* FORM */}
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {mode === "register" && (
               <input
@@ -127,6 +160,12 @@ export default function AuthPage() {
               />
             )}
 
+            {error && (
+              <p className="text-sm text-red-500 text-center">
+                {error}
+              </p>
+            )}
+
             <button
               type="submit"
               className={`w-full rounded-xl py-3 text-white font-medium transition ${
@@ -136,7 +175,7 @@ export default function AuthPage() {
               }`}
             >
               {mode === "login"
-                ? `Login as ${role === "owner" ? "Owner" : "Student"}`
+                ? "Login"
                 : `Register as ${role === "owner" ? "Owner" : "Student"}`}
             </button>
           </form>

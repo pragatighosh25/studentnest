@@ -1,49 +1,7 @@
 import { Eye, ShieldCheck, ShieldOff } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AdminPGDetailsModal from "./AdminPGDetailsModal";
-
-/* ---------- MOCK DATA ---------- */
-const mockPGs = [
-   {
-    id: 1,
-    name: "Green Nest PG",
-    ownerName: "Rahul Sharma",
-    ownerPhone: "9876543210",
-    city: "Kolkata",
-    area: "Salt Lake",
-    address: "Salt Lake Sector V, Kolkata",
-    gender: "Girls",
-    roomType: "Single",
-    rent: 6500,
-    deposit: 13000,
-    amenities: ["WiFi", "Food", "Laundry"],
-    images: [
-      "https://picsum.photos/300/200?1",
-      "https://picsum.photos/300/200?2",
-    ],
-    active: true,
-    verified: false,
-  },
-  {
-    id: 2,
-    name: "Urban Stay",
-    ownerName: "Aman Verma",          // ✅ fixed
-    ownerPhone: "9123456789",         // ✅ added
-    city: "Delhi",
-    area: "Dwarka",
-    address: "Dwarka Sector 10, Delhi",
-    gender: "Boys",
-    roomType: "Double",               // ✅ added
-    rent: 7500,
-    deposit: 15000,
-    amenities: ["WiFi", "Parking"],   // ✅ added
-    images: [
-      "https://picsum.photos/300/200?3",
-    ],
-    active: false,
-    verified: true,
-  },
-];
+import { apiFetch } from "../../utils/api";
 
 const GENDER_STYLE = {
   Boys: "bg-blue-100 text-blue-700 dark:bg-blue-900/40",
@@ -52,21 +10,64 @@ const GENDER_STYLE = {
 };
 
 export default function AdminPGTable() {
+  const [pgs, setPGs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedPG, setSelectedPG] = useState(null);
 
-  const [pgs, setPGs] = useState(mockPGs);
+  /* ---------- FETCH ALL PGs (ADMIN) ---------- */
+  useEffect(() => {
+    const fetchPGs = async () => {
+      try {
+        const data = await apiFetch("/admin/pgs");
+        setPGs(data);
+      } catch (err) {
+        console.error("Failed to fetch PGs:", err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const toggleActive = (id) => {
-    setPGs((prev) =>
-      prev.map((pg) => (pg.id === id ? { ...pg, active: !pg.active } : pg))
-    );
+    fetchPGs();
+  }, []);
+
+  /* ---------- VERIFY / UNVERIFY PG ---------- */
+  const toggleVerified = async (id) => {
+    try {
+      const updated = await apiFetch(`/admin/pgs/${id}/verify`, {
+        method: "PATCH",
+      });
+
+      setPGs((prev) =>
+        prev.map((pg) => (pg._id === updated._id ? updated : pg))
+      );
+    } catch (err) {
+      console.error("Verify failed:", err.message);
+    }
   };
 
-  const toggleVerified = (id) => {
-    setPGs((prev) =>
-      prev.map((pg) => (pg.id === id ? { ...pg, verified: !pg.verified } : pg))
-    );
+  /* ---------- ACTIVATE / SUSPEND PG ---------- */
+  const toggleActive = async (id) => {
+    try {
+      const updated = await apiFetch(`/admin/pgs/${id}/toggle`, {
+        method: "PATCH",
+      });
+
+      setPGs((prev) =>
+        prev.map((pg) => (pg._id === updated._id ? updated : pg))
+      );
+    } catch (err) {
+      console.error("Toggle failed:", err.message);
+    }
   };
+
+  /* ---------- LOADING STATE ---------- */
+  if (loading) {
+    return (
+      <div className="p-10 text-center text-gray-500">
+        Loading PGs...
+      </div>
+    );
+  }
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
@@ -78,15 +79,16 @@ export default function AdminPGTable() {
             <th className="px-4 py-3 text-left dark:text-gray-400">Gender</th>
             <th className="px-4 py-3 text-left dark:text-gray-400">Rent</th>
             <th className="px-4 py-3 text-left dark:text-gray-400">Status</th>
-            <th className="px-4 py-3 text-right dark:text-gray-400">Actions</th>
+            <th className="px-4 py-3 text-right dark:text-gray-400">
+              Actions
+            </th>
           </tr>
         </thead>
 
         <tbody>
           {pgs.map((pg) => (
             <tr
-              key={pg.id}
-              onHove
+              key={pg._id}
               onClick={() => setSelectedPG(pg)}
               className="border-t border-gray-200 dark:border-zinc-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition"
             >
@@ -102,14 +104,14 @@ export default function AdminPGTable() {
 
               {/* OWNER */}
               <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
-                {pg.ownerName}
+                {pg.ownerId?.name || "—"}
               </td>
 
               {/* GENDER */}
               <td className="px-4 py-3">
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    GENDER_STYLE[pg.gender]
+                    GENDER_STYLE[pg.gender] || ""
                   }`}
                 >
                   {pg.gender}
@@ -137,7 +139,7 @@ export default function AdminPGTable() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleVerified(pg.id);
+                    toggleVerified(pg._id);
                   }}
                   className="text-blue-600 hover:opacity-80"
                   title="Verify PG"
@@ -152,7 +154,7 @@ export default function AdminPGTable() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleActive(pg.id);
+                    toggleActive(pg._id);
                   }}
                   className="text-gray-600 hover:text-red-600"
                   title="Suspend PG"
@@ -164,18 +166,21 @@ export default function AdminPGTable() {
           ))}
         </tbody>
       </table>
-      {selectedPG && (
-      <AdminPGDetailsModal
-        pg={selectedPG}
-        onClose={() => setSelectedPG(null)}
-      />
-    )}
 
+      {/* EMPTY STATE */}
       {pgs.length === 0 && (
-        <div className="py-10 text-center text-gray-500">No PGs available</div>
+        <div className="py-10 text-center text-gray-500">
+          No PGs available
+        </div>
       )}
-      
+
+      {/* DETAILS MODAL */}
+      {selectedPG && (
+        <AdminPGDetailsModal
+          pg={selectedPG}
+          onClose={() => setSelectedPG(null)}
+        />
+      )}
     </div>
-    
   );
 }

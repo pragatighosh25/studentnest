@@ -1,4 +1,5 @@
 import PG from "../models/PG.js";
+import User from "../models/User.js";
 
 /* ---------- GET ALL PGs ---------- */
 export const getAllPGs = async (req, res) => {
@@ -44,5 +45,20 @@ export const toggleActivePG = async (req, res) => {
     res.json(pg);
   } catch {
     res.status(500).json({ message: "Failed to update PG status" });
+  }
+};
+export const getAdminStats = async (req, res) => {
+  try {
+    const totalPGs = await PG.countDocuments();
+    const activePGs = await PG.countDocuments({ active: true });
+    const owners = await User.countDocuments({ role: "owner" });
+
+    res.json({
+      totalPGs,
+      activePGs,
+      owners,
+    });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch admin stats" });
   }
 };

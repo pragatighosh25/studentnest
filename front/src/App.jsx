@@ -18,10 +18,9 @@ export default function App() {
         <Route path="/pgs" element={<PGList />} />
         <Route path="/pg/:id" element={<PGDetail />} />
         <Route path="/owner/login" element={<Login />} />
-        <Route element={<ProtectedOwnerRoute />}>
+        
           <Route path="/owner/dashboard" element={<Dashboard />} />
-        </Route>
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
       <Footer />
     </BrowserRouter>
