@@ -30,10 +30,10 @@ export default function PGTable({ pgs, onEdit, onRefresh }) {
       <table className="w-full text-sm">
         <thead className="bg-gray-100 dark:bg-zinc-800">
           <tr>
-            <th className="px-4 py-3 text-left">PG</th>
-            <th className="px-4 py-3 text-left">City</th>
-            <th className="px-4 py-3 text-left">Rent</th>
-            <th className="px-4 py-3 text-right">Actions</th>
+            <th className="dark:text-gray-500 px-4 py-3 text-left">PG</th>
+            <th className="dark:text-gray-500 px-4 py-3 text-left">City</th>
+            <th className="dark:text-gray-500 px-4 py-3 text-left">Rent</th>
+            <th className="dark:text-gray-500 px-4 py-3 text-right">Actions</th>
           </tr>
         </thead>
 
@@ -43,10 +43,10 @@ export default function PGTable({ pgs, onEdit, onRefresh }) {
               key={pg._id}
               className="border-t border-gray-200 dark:border-zinc-800"
             >
-              <td className="px-4 py-3">{pg.name}</td>
-              <td className="px-4 py-3">{pg.city}</td>
-              <td className="px-4 py-3">₹{pg.rent}</td>
-              <td className="px-4 py-3 flex justify-end gap-3">
+              <td className="dark:text-gray-300 px-4 py-3">{pg.name}</td>
+              <td className="dark: text-gray-300 px-4 py-3">{pg.city}</td>
+              <td className="dark: text-gray-300 px-4 py-3">₹{pg.rent}</td>
+              <td className="dark:text-gray-300 px-4 py-3 flex justify-end gap-3">
                 <button onClick={() => onEdit(pg)}>
                   <Edit className="h-4 w-4 text-blue-600" />
                 </button>

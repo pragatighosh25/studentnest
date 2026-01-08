@@ -29,7 +29,7 @@ function InputField({ value, onChange, error, ...props }) {
 }
 
 /* ---------- MAIN MODAL ---------- */
-export default function PGFormModal({ pg, onClose }) {
+export default function PGFormModal({ pg, onClose, onSuccess }) {
   const isEdit = Boolean(pg);
 
   const [form, setForm] = useState({
@@ -64,15 +64,20 @@ export default function PGFormModal({ pg, onClose }) {
   };
 
   const handleImages = (files) => {
-    const previews = Array.from(files).map((file) =>
-      URL.createObjectURL(file)
-    );
-    setForm((prev) => ({
+  if (form.images.length + files.length > 6) {
+    setErrors((prev) => ({
       ...prev,
-      images: [...prev.images, ...previews],
+      images: "You can upload maximum 6 images",
     }));
-    setErrors((prev) => ({ ...prev, images: "" }));
-  };
+    return;
+  }
+
+  setForm((prev) => ({
+    ...prev,
+    images: [...prev.images, ...Array.from(files)],
+  }));
+};
+
 
   const removeImage = (index) => {
     setForm((prev) => ({
@@ -107,19 +112,42 @@ export default function PGFormModal({ pg, onClose }) {
   if (!validate()) return;
 
   try {
+    const data = new FormData();
+
+    Object.entries(form).forEach(([key, value]) => {
+  if (key === "amenities") {
+    value.forEach((a) => data.append("amenities[]", a));
+  } else if (key !== "images") {
+    data.append(key, value);
+  }
+});
+
+// 🔥 IMAGE HANDLING 
+form.images.forEach((img) => {
+  if (typeof img === "string" || img.url) {
+    
+    data.append("existingImages", img.url ?? img);
+  } else {
+    
+    data.append("images", img);
+  }
+});
+
     if (isEdit) {
       await apiFetch(`/owner/pgs/${pg._id}`, {
         method: "PATCH",
-        body: JSON.stringify(form),
+        body: data,
+        isFormData: true,
       });
     } else {
       await apiFetch("/owner/pgs", {
         method: "POST",
-        body: JSON.stringify(form),
+        body: data,
+        isFormData: true,
       });
     }
 
-    onSuccess(); // refresh table
+    onSuccess();
     onClose();
   } catch (err) {
     console.error(err.message);
@@ -274,11 +302,7 @@ export default function PGFormModal({ pg, onClose }) {
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {form.images.map((img, i) => (
                   <div key={i} className="relative group">
-                    <img
-                      src={img}
-                      alt=""
-                      className="h-24 w-full object-cover rounded-lg"
-                    />
+                    <img src={typeof img === "string" ? img : img.url} alt="" className="h-24 w-full object-cover rounded-lg" />
                     <button
                       type="button"
                       onClick={() => removeImage(i)}

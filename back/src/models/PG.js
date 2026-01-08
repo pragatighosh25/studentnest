@@ -16,6 +16,11 @@ const pgSchema = new mongoose.Schema(
     rent: { type: Number, required: true },
     deposit: { type: Number, required: true },
 
+    phone: {
+      type: String,
+      required: true,
+    },
+
     gender: {
       type: String,
       enum: ["Boys", "Girls", "Co-ed"],
@@ -28,15 +33,39 @@ const pgSchema = new mongoose.Schema(
       required: true,
     },
 
-    amenities: [String],
+    amenities: {
+      type: [String],
+      default: [],
+    },
 
-    images: [String], // cloudinary URLs later
+images: {
+  type: [
+    {
+      url: {
+        type: String,
+        required: true,
+      },
+      publicId: {
+        type: String,
+        required: true,
+      },
+    },
+  ],
+  validate: (v) => v.length > 0,
+},
 
-    active: { type: Boolean, default: true },
-    verified: { type: Boolean, default: false },
+
+    active: {
+      type: Boolean,
+      default: true,
+    },
+
+    verified: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
 
 export default mongoose.model("PG", pgSchema);
-
