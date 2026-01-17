@@ -1,5 +1,4 @@
 import { Eye, EyeOff, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
 import AdminPGDetailsModal from "./AdminPGDetailsModal";
 import { apiFetch } from "../../utils/api";
 
@@ -9,26 +8,13 @@ const GENDER_STYLE = {
   "Co-ed": "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200",
 };
 
-export default function AdminPGTable() {
+export default function AdminPGTable({ pgs, setPGs, loading }) {
+
   const [pgs, setPGs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedPG, setSelectedPG] = useState(null);
 
-  /* ---------- FETCH ALL PGs (ADMIN) ---------- */
-  useEffect(() => {
-    const fetchPGs = async () => {
-      try {
-        const data = await apiFetch("/admin/pgs");
-        setPGs(data);
-      } catch (err) {
-        console.error("Failed to fetch PGs:", err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchPGs();
-  }, []);
 
   /* ---------- VERIFY / UNVERIFY PG ---------- */
   const toggleVerified = async (pg) => {

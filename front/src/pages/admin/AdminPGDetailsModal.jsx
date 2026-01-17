@@ -11,6 +11,7 @@ export default function AdminPGDetailsModal({ pg, onClose }) {
 
   const ownerName = pg.ownerId?.name || "—";
   const ownerEmail = pg.ownerId?.email || "—";
+  const ownerPhone = pg.ownerId?.phone || pg.phone || "—";
 
   return (
     <div
@@ -41,6 +42,9 @@ export default function AdminPGDetailsModal({ pg, onClose }) {
             </p>
             <p className="text-gray-600 dark:text-gray-400">
               {ownerEmail}
+            </p>
+            <p className="text-gray-600 dark:text-gray-400">
+              {ownerPhone}
             </p>
           </div>
 

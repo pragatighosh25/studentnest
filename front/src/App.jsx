@@ -18,8 +18,7 @@ export default function App() {
         <Route path="/pgs" element={<PGList />} />
         <Route path="/pg/:id" element={<PGDetail />} />
         <Route path="/owner/login" element={<Login />} />
-        
-          <Route path="/owner/dashboard" element={<Dashboard />} />
+        <Route path="/owner/dashboard" element={<Dashboard />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
       </Routes>
       <Footer />

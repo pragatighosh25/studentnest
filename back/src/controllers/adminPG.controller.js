@@ -4,10 +4,8 @@ import User from "../models/User.js";
 /* ---------- GET ALL PGs ---------- */
 export const getAllPGs = async (req, res) => {
   try {
-    const pgs = await PG.find().populate(
-      "ownerId",
-      "name email"
-    );
+    const pgs = await PG.find().populate("ownerId", "name email phone")
+  .sort({ createdAt: -1 });
     res.json(pgs);
   } catch {
     res.status(500).json({ message: "Failed to fetch PGs" });
