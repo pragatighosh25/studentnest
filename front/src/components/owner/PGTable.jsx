@@ -1,18 +1,31 @@
 import { Edit, Trash2, Eye, EyeOff } from "lucide-react";
 import { apiFetch } from "../../utils/api";
 
-export default function PGTable({ pgs, onEdit, onRefresh }) {
+export default function PGTable({ pgs, onEdit, onRefresh, setPGs }) {
   const toggleActive = async (pg) => {
-    try {
-      await apiFetch(`/owner/pgs/${pg._id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ active: !pg.active }),
-      });
-      onRefresh();
-    } catch (err) {
-      console.error(err.message);
-    }
-  };
+  const newActive = !pg.active;
+
+  // ✅ Optimistic UI update
+  setPGs((prev) =>
+    prev.map((p) => (p._id === pg._id ? { ...p, active: newActive } : p))
+  );
+
+  try {
+    await apiFetch(`/owner/pgs/${pg._id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ active: newActive }),
+    });
+  } catch (err) {
+    console.error(err.message);
+
+    // ❌ rollback if failed
+    setPGs((prev) =>
+      prev.map((p) => (p._id === pg._id ? { ...p, active: pg.active } : p))
+    );
+  }
+};
+
 
   const deletePG = async (id) => {
     if (!confirm("Delete this PG?")) return;
@@ -47,22 +60,35 @@ export default function PGTable({ pgs, onEdit, onRefresh }) {
               <td className="dark: text-gray-300 px-4 py-3">{pg.city}</td>
               <td className="dark: text-gray-300 px-4 py-3">₹{pg.rent}</td>
               <td className="dark:text-gray-300 px-4 py-3 flex justify-end gap-3">
-                <button onClick={() => onEdit(pg)}>
-                  <Edit className="h-4 w-4 text-blue-600" />
-                </button>
+  <button
+    onClick={() => onEdit(pg)}
+    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+    title="Edit PG"
+  >
+    <Edit className="h-4 w-4 text-blue-600" />
+  </button>
 
-                <button onClick={() => toggleActive(pg)}>
-                  {pg.active ? (
-                    <Eye className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <EyeOff className="h-4 w-4 text-gray-500" />
-                  )}
-                </button>
+  <button
+    onClick={() => toggleActive(pg)}
+    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+    title={pg.active ? "Hide from students" : "Show to students"}
+  >
+    {pg.active ? (
+      <Eye className="h-4 w-4 text-green-600" />
+    ) : (
+      <EyeOff className="h-4 w-4 text-gray-500" />
+    )}
+  </button>
 
-                <button onClick={() => deletePG(pg._id)}>
-                  <Trash2 className="h-4 w-4 text-red-600" />
-                </button>
-              </td>
+  <button
+    onClick={() => deletePG(pg._id)}
+    className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+    title="Delete PG"
+  >
+    <Trash2 className="h-4 w-4 text-red-600" />
+  </button>
+</td>
+
             </tr>
           ))}
 

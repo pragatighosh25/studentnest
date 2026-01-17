@@ -1,4 +1,4 @@
-import { Eye, ShieldCheck, ShieldOff } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import AdminPGDetailsModal from "./AdminPGDetailsModal";
 import { apiFetch } from "../../utils/api";
@@ -31,42 +31,50 @@ export default function AdminPGTable() {
   }, []);
 
   /* ---------- VERIFY / UNVERIFY PG ---------- */
-  const toggleVerified = async (id) => {
+  const toggleVerified = async (pg) => {
     try {
-      const updated = await apiFetch(`/admin/pgs/${id}/verify`, {
+      const updated = await apiFetch(`/admin/pgs/${pg._id}`, {
         method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ verified: !pg.verified }),
       });
 
-      setPGs((prev) =>
-        prev.map((pg) => (pg._id === updated._id ? updated : pg))
-      );
+      setPGs((prev) => prev.map((p) => (p._id === updated._id ? updated : p)));
     } catch (err) {
       console.error("Verify failed:", err.message);
     }
   };
 
   /* ---------- ACTIVATE / SUSPEND PG ---------- */
-  const toggleActive = async (id) => {
+  const toggleActive = async (pg) => {
     try {
-      const updated = await apiFetch(`/admin/pgs/${id}/toggle`, {
+      const updated = await apiFetch(`/admin/pgs/${pg._id}`, {
         method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active: !pg.active }),
       });
 
-      setPGs((prev) =>
-        prev.map((pg) => (pg._id === updated._id ? updated : pg))
-      );
+      setPGs((prev) => prev.map((p) => (p._id === updated._id ? updated : p)));
     } catch (err) {
       console.error("Toggle failed:", err.message);
+    }
+  };
+  /* ---------- DELETE PG ---------- */
+  const deletePG = async (id) => {
+    if (!confirm("Delete this PG permanently?")) return;
+
+    try {
+      await apiFetch(`/admin/pgs/${id}`, { method: "DELETE" });
+      setPGs((prev) => prev.filter((p) => p._id !== id));
+      setSelectedPG(null);
+    } catch (err) {
+      console.error("Delete failed:", err.message);
     }
   };
 
   /* ---------- LOADING STATE ---------- */
   if (loading) {
-    return (
-      <div className="p-10 text-center text-gray-500">
-        Loading PGs...
-      </div>
-    );
+    return <div className="p-10 text-center text-gray-500">Loading PGs...</div>;
   }
 
   return (
@@ -79,9 +87,7 @@ export default function AdminPGTable() {
             <th className="px-4 py-3 text-left dark:text-gray-400">Gender</th>
             <th className="px-4 py-3 text-left dark:text-gray-400">Rent</th>
             <th className="px-4 py-3 text-left dark:text-gray-400">Status</th>
-            <th className="px-4 py-3 text-right dark:text-gray-400">
-              Actions
-            </th>
+            <th className="px-4 py-3 text-right dark:text-gray-400">Actions</th>
           </tr>
         </thead>
 
@@ -139,27 +145,41 @@ export default function AdminPGTable() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleVerified(pg._id);
+                    toggleVerified(pg);
                   }}
-                  className="text-blue-600 hover:opacity-80"
-                  title="Verify PG"
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                  title={pg.verified ? "Unverify PG" : "Verify PG"}
                 >
                   {pg.verified ? (
-                    <ShieldCheck className="h-4 w-4" />
+                    <ShieldCheck className="h-4 w-4 text-blue-600" />
                   ) : (
-                    <ShieldOff className="h-4 w-4" />
+                    <ShieldOff className="h-4 w-4 text-gray-500" />
                   )}
                 </button>
 
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    toggleActive(pg._id);
+                    toggleActive(pg);
                   }}
-                  className="text-gray-600 hover:text-red-600"
-                  title="Suspend PG"
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                  title={pg.active ? "Hide from students" : "Show to students"}
                 >
-                  <Eye className="h-4 w-4" />
+                  {pg.active ? (
+                    <Eye className="h-4 w-4 text-green-600" />
+                  ) : (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  )}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deletePG(pg._id);
+                  }}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                  title="Delete PG"
+                >
+                  <Trash2 className="h-4 w-4 text-red-600" />
                 </button>
               </td>
             </tr>
@@ -169,9 +189,7 @@ export default function AdminPGTable() {
 
       {/* EMPTY STATE */}
       {pgs.length === 0 && (
-        <div className="py-10 text-center text-gray-500">
-          No PGs available
-        </div>
+        <div className="py-10 text-center text-gray-500">No PGs available</div>
       )}
 
       {/* DETAILS MODAL */}

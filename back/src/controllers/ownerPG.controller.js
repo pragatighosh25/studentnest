@@ -6,13 +6,15 @@ export const createPG = async (req, res) => {
   try {
     // 🔥 THIS IS WHERE YOUR CODE GOES
     const uploads = [];
+if (req.files && req.files.length > 0) {
+  for (const file of req.files) {
+    uploads.push({
+      url: file.path,
+      publicId: file.filename,
+    });
+  }
+}
 
-    for (const file of req.files) {
-      uploads.push({
-        url: file.path,        // Cloudinary secure_url
-        publicId: file.filename,
-      });
-    }
 
     const pg = await PG.create({
       ...req.body,
@@ -48,59 +50,79 @@ export const updatePG = async (req, res) => {
       ownerId: req.user.id,
     });
 
-    if (!pg) return res.status(404).json({ message: "PG not found" });
+    if (!pg) {
+      return res.status(404).json({ message: "PG not found" });
+    }
 
-    // ✅ normalize existingImages from formdata
+    // ✅ If request is JSON toggle (active/verified only), don't run image logic
+    const isSimpleToggle =
+      req.headers["content-type"]?.includes("application/json") &&
+      (typeof req.body.active !== "undefined" ||
+        typeof req.body.verified !== "undefined");
+
+    if (isSimpleToggle) {
+      if (typeof req.body.active !== "undefined") pg.active = req.body.active;
+      if (typeof req.body.verified !== "undefined")
+        pg.verified = req.body.verified;
+
+      await pg.save();
+      return res.json(pg);
+    }
+
+    // ✅ Full Edit Flow (multipart/form-data)
     const existingImages = req.body.existingImages
       ? Array.isArray(req.body.existingImages)
         ? req.body.existingImages
         : [req.body.existingImages]
       : [];
 
-    // ✅ normalize pg.images (supports both old string[] and new [{url, publicId}])
+    // ✅ normalize pg.images (handles both string[] and [{url, publicId}])
     const oldImagesNormalized = (pg.images || []).map((img) => {
       if (typeof img === "string") return { url: img, publicId: null };
       return img;
     });
 
-    // ✅ find removed images by comparing URL
+    // ✅ new uploads (if any)
+    const uploads = [];
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        uploads.push({
+          url: file.path,
+          publicId: file.filename,
+        });
+      }
+    }
+
+    // ✅ removed images = those not present in existingImages
     const removedImages = oldImagesNormalized.filter(
       (img) => !existingImages.includes(img.url)
     );
 
-    // ✅ delete only those which have publicId
+    // ✅ delete removed cloudinary images only if publicId exists
     for (const img of removedImages) {
       if (img.publicId) {
         await cloudinary.uploader.destroy(img.publicId);
       }
     }
 
-    // ✅ new uploads
-    const uploads = (req.files || []).map((file) => ({
-      url: file.path,
-      publicId: file.filename,
-    }));
-
-    // ✅ keep only the images user kept + append new uploads
+    // ✅ keep only kept images
     const keptImages = oldImagesNormalized.filter((img) =>
       existingImages.includes(img.url)
     );
 
     pg.images = [...keptImages, ...uploads];
 
-    // ✅ update other fields (avoid overwriting images accidentally)
-    const { images, existingImages: ex, ...rest } = req.body;
+    // ✅ update other fields safely (don’t overwrite images)
+    const { existingImages: ex, images, ...rest } = req.body;
     Object.assign(pg, rest);
 
     await pg.save();
-
     res.json(pg);
   } catch (err) {
     console.error("UPDATE PG ERROR:", err);
     res.status(500).json({ message: "Failed to update PG" });
   }
 };
-
 
 /* ---------- DELETE PG ---------- */
 export const deletePG = async (req, res) => {

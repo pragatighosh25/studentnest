@@ -56,7 +56,10 @@ export default function OwnerDashboard() {
               title="Active Listings"
               value={pgs.filter((p) => p.active).length}
             />
-            <StatsCard title="Inquiries" value="—" />
+            <StatsCard
+              title="Inquiries"
+              value={pgs.reduce((sum, pg) => sum + (pg.inquiryCount || 0), 0)}
+            />
           </div>
 
           {/* PG Table */}
@@ -71,28 +74,30 @@ export default function OwnerDashboard() {
                 setOpen(true);
               }}
               onRefresh={fetchPGs}
+              setPGs={setPGs}
             />
           )}
 
           {/* Modal */}
-{open && (
-  <PGFormModal
-    pg={editingPG}
-    onClose={() => {
-      setOpen(false);
-      setEditingPG(null);
-    }}
-    onSuccess={(savedPg, isEdit) => {
-      setPGs((prev) => {
-        if (isEdit) {
-          return prev.map((p) => (p._id === savedPg._id ? savedPg : p));
-        }
-        return [savedPg, ...prev];
-      });
-    }}
-  />
-)}
-
+          {open && (
+            <PGFormModal
+              pg={editingPG}
+              onClose={() => {
+                setOpen(false);
+                setEditingPG(null);
+              }}
+              onSuccess={(savedPg, isEdit) => {
+                setPGs((prev) => {
+                  if (isEdit) {
+                    return prev.map((p) =>
+                      p._id === savedPg._id ? savedPg : p
+                    );
+                  }
+                  return [savedPg, ...prev];
+                });
+              }}
+            />
+          )}
         </div>
       </section>
     </PageWrapper>

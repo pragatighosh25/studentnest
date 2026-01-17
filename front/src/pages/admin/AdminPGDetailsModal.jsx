@@ -114,7 +114,7 @@ export default function AdminPGDetailsModal({ pg, onClose }) {
                 {pg.images.map((img, i) => (
                   <img
                     key={i}
-                    src={img}
+                    src={typeof img === "string" ? img : img.url}
                     alt={`PG ${i + 1}`}
                     className="h-24 w-full object-cover rounded-lg"
                   />

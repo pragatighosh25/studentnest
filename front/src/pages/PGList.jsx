@@ -1,16 +1,15 @@
-import { useState } from "react";
-import { pgList } from "../data/mockPGs";
+import { useEffect, useMemo, useState } from "react";
 import PGCard from "../components/PGCard";
 import Filters from "../components/Filters";
 import PageWrapper from "../components/PageWrapper";
 import { useSearch } from "../context/SearchContext";
+import { apiFetch } from "../utils/api";
 
-const normalize = (str = "") => str.toLowerCase().trim();
+const normalize = (str = "") => String(str).toLowerCase().trim();
 
 export default function PGList() {
   const { query } = useSearch();
 
-  // unified filter state
   const [filters, setFilters] = useState({
     city: "",
     area: "",
@@ -19,46 +18,65 @@ export default function PGList() {
     roomType: "",
   });
 
-  // derive autocomplete suggestions
-  const cities = [...new Set(pgList.map((pg) => pg.city))];
-  const areas = [...new Set(pgList.map((pg) => pg.area))];
+  const [pgs, setPgs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // ✅ fetch public PGs
+  useEffect(() => {
+    const fetchPGs = async () => {
+      try {
+        const data = await apiFetch("/pgs"); // ✅ GET /api/pgs
+        setPgs(data);
+      } catch (err) {
+        console.error("Failed to fetch PGs:", err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // filtering logic
-  const filteredPGs = pgList.filter((pg) => {
-    const matchesSearch =
-      normalize(pg.city).includes(normalize(query)) ||
-      normalize(pg.area).includes(normalize(query));
+    fetchPGs();
+  }, []);
 
-    const matchesCity = filters.city
-      ? normalize(pg.city).includes(normalize(filters.city))
-      : true;
+  // ✅ suggestions from backend data
+  const cities = useMemo(() => [...new Set(pgs.map((pg) => pg.city))], [pgs]);
+  const areas = useMemo(() => [...new Set(pgs.map((pg) => pg.area))], [pgs]);
 
-    const matchesArea = filters.area
-      ? normalize(pg.area).includes(normalize(filters.area))
-      : true;
+  // ✅ filter backend PGs
+  const filteredPGs = useMemo(() => {
+    return pgs.filter((pg) => {
+      const matchesSearch =
+        normalize(pg.city).includes(normalize(query)) ||
+        normalize(pg.area).includes(normalize(query)) ||
+        normalize(pg.name).includes(normalize(query));
 
-    const matchesBudget = filters.budget
-      ? pg.rent <= Number(filters.budget)
-      : true;
+      const matchesCity = filters.city
+        ? normalize(pg.city).includes(normalize(filters.city))
+        : true;
 
-    const matchesGender = filters.gender
-      ? pg.gender === filters.gender
-      : true;
+      const matchesArea = filters.area
+        ? normalize(pg.area).includes(normalize(filters.area))
+        : true;
 
-    const matchesRoomType = filters.roomType
-      ? pg.roomType === filters.roomType
-      : true;
+      const matchesBudget = filters.budget
+        ? Number(pg.rent) <= Number(filters.budget)
+        : true;
 
-    return (
-      matchesSearch &&
-      matchesCity &&
-      matchesArea &&
-      matchesBudget &&
-      matchesGender &&
-      matchesRoomType
-    );
-  });
+      const matchesGender = filters.gender ? pg.gender === filters.gender : true;
+
+      const matchesRoomType = filters.roomType
+        ? pg.roomType === filters.roomType
+        : true;
+
+      return (
+        matchesSearch &&
+        matchesCity &&
+        matchesArea &&
+        matchesBudget &&
+        matchesGender &&
+        matchesRoomType
+      );
+    });
+  }, [pgs, query, filters]);
 
   return (
     <PageWrapper>
@@ -67,11 +85,18 @@ export default function PGList() {
           {/* Header */}
           <div className="mb-6">
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-              PGs in Kolkata
+              PGs
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {filteredPGs.length} options available
-            </p>
+
+            {loading ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Loading options...
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {filteredPGs.length} options available
+              </p>
+            )}
           </div>
 
           {/* Filters */}
@@ -85,10 +110,12 @@ export default function PGList() {
           </div>
 
           {/* Cards */}
-          {filteredPGs.length > 0 ? (
+          {loading ? (
+            <p className="text-gray-500">Loading PGs...</p>
+          ) : filteredPGs.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {filteredPGs.map((pg) => (
-                <PGCard key={pg.id} pg={pg} />
+                <PGCard key={pg._id} pg={pg} />
               ))}
             </div>
           ) : (

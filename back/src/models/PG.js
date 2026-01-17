@@ -38,22 +38,21 @@ const pgSchema = new mongoose.Schema(
       default: [],
     },
 
-images: {
-  type: [
-    {
-      url: {
-        type: String,
-        required: true,
-      },
-      publicId: {
-        type: String,
-        required: true,
-      },
+    images: {
+      type: [
+        {
+          url: {
+            type: String,
+            required: true,
+          },
+          publicId: {
+            type: String,
+            required: true,
+          },
+        },
+      ],
+      validate: (v) => v.length > 0,
     },
-  ],
-  validate: (v) => v.length > 0,
-},
-
 
     active: {
       type: Boolean,
@@ -63,6 +62,10 @@ images: {
     verified: {
       type: Boolean,
       default: false,
+    },
+    inquiryCount: {
+      type: Number,
+      default: 0,
     },
   },
   { timestamps: true }

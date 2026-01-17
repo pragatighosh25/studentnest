@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ArrowLeft } from "lucide-react";
+
 import ThemeToggle from "./ThemeToggle";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
@@ -9,6 +10,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [user, setUser] = useState(null);
   const location = useLocation();
+const showBack = location.pathname !== "/";
 
   /* ---------- LOAD USER FROM STORAGE ---------- */
   useEffect(() => {
@@ -18,6 +20,7 @@ export default function Navbar() {
   } else {
     setUser(null);
   }
+  setOpen(false);
 }, [location.pathname]);
 
   /* ---------- LOGOUT ---------- */
@@ -32,10 +35,26 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur dark:bg-zinc-950 border-b border-gray-200 dark:border-zinc-800">
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        {/* Logo */}
-        <Link to="/" className="text-xl font-semibold text-blue-600">
-          StudentNest
-        </Link>
+  {/* Left side: Back + Logo */}
+  <div className="flex items-center gap-2">
+    {showBack && (
+      <button
+        onClick={() => {
+          if (window.history.length > 1) navigate(-1);
+          else navigate("/");
+        }}
+        className="rounded-xl p-2 hover:bg-gray-100 dark:hover:bg-zinc-900 transition"
+        title="Go back"
+      >
+        <ArrowLeft className="h-5 w-5 text-gray-700 dark:text-zinc-300" />
+      </button>
+    )}
+
+    <Link to="/" className="text-xl font-semibold text-blue-600">
+      StudentNest
+    </Link>
+  </div>
+
 
         {/* Actions */}
         <div className="flex items-center gap-4 relative">
