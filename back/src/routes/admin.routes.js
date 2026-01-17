@@ -2,17 +2,21 @@ import express from "express";
 import auth from "../middleware/auth.middleware.js";
 import adminOnly from "../middleware/adminOnly.middleware.js";
 import {
-  getAllPGs,
-  toggleVerifyPG,
-  toggleActivePG, getAdminStats
+  getAllPGsAdmin,
+  updatePGAdmin,
+  deletePGAdmin,
 } from "../controllers/adminPG.controller.js";
 
 const router = express.Router();
 
-router.get("/stats", auth, adminOnly, getAdminStats);
-router.get("/pgs", auth, adminOnly, getAllPGs);
-router.patch("/pgs/:id/verify", auth, adminOnly, toggleVerifyPG);
-router.patch("/pgs/:id/toggle", auth, adminOnly, toggleActivePG);
+// ✅ GET all PGs
+router.get("/pgs", auth, adminOnly, getAllPGsAdmin);
 
+// ✅ PATCH active/verified
+router.patch("/pgs/:id", auth, adminOnly, updatePGAdmin);
+
+// ✅ DELETE PG
+router.delete("/pgs/:id", auth, adminOnly, deletePGAdmin);
 
 export default router;
+
