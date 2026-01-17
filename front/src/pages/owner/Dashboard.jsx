@@ -60,6 +60,7 @@ export default function OwnerDashboard() {
           </div>
 
           {/* PG Table */}
+
           {loading ? (
             <p className="text-gray-500">Loading PGs...</p>
           ) : (
@@ -74,13 +75,24 @@ export default function OwnerDashboard() {
           )}
 
           {/* Modal */}
-          {open && (
-            <PGFormModal
-              pg={editingPG}
-              onClose={() => setOpen(false)}
-              onSuccess={fetchPGs}
-            />
-          )}
+{open && (
+  <PGFormModal
+    pg={editingPG}
+    onClose={() => {
+      setOpen(false);
+      setEditingPG(null);
+    }}
+    onSuccess={(savedPg, isEdit) => {
+      setPGs((prev) => {
+        if (isEdit) {
+          return prev.map((p) => (p._id === savedPg._id ? savedPg : p));
+        }
+        return [savedPg, ...prev];
+      });
+    }}
+  />
+)}
+
         </div>
       </section>
     </PageWrapper>
