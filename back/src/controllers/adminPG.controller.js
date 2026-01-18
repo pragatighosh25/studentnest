@@ -31,7 +31,14 @@ export const updatePGAdmin = async (req, res) => {
     }
 
     await pg.save();
-    res.json(pg);
+
+const updatedPG = await PG.findById(pg._id).populate(
+  "ownerId",
+  "name email phone"
+);
+
+res.json(updatedPG);
+
   } catch (err) {
     console.error("ADMIN UPDATE PG ERROR:", err);
     res.status(500).json({ message: "Failed to update PG" });
