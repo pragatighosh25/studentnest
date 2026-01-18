@@ -58,12 +58,6 @@ const showBack = location.pathname !== "/";
 
         {/* Actions */}
         <div className="flex items-center gap-4 relative">
-          <Link
-            to="/pgs"
-            className="text-gray-700 dark:text-zinc-300 hover:text-blue-600 transition"
-          >
-            Browse PGs
-          </Link>
 
           {/* Auth */}
           {!user ? (
