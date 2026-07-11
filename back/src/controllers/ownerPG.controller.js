@@ -1,20 +1,32 @@
 import PG from "../models/PG.js";
 import cloudinary from "../lib/cloudinary.js";
 
+const toTitleCase = (str) => {
+  if (!str) return "";
+  return str
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 /* ---------- CREATE PG ---------- */
 export const createPG = async (req, res) => {
   try {
     // 🔥 THIS IS WHERE YOUR CODE GOES
     const uploads = [];
-if (req.files && req.files.length > 0) {
-  for (const file of req.files) {
-    uploads.push({
-      url: file.path,
-      publicId: file.filename,
-    });
-  }
-}
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        uploads.push({
+          url: file.path,
+          publicId: file.filename,
+        });
+      }
+    }
 
+    if (req.body.city) req.body.city = toTitleCase(req.body.city);
+    if (req.body.area) req.body.area = toTitleCase(req.body.area);
 
     const pg = await PG.create({
       ...req.body,
@@ -111,6 +123,9 @@ export const updatePG = async (req, res) => {
     );
 
     pg.images = [...keptImages, ...uploads];
+
+    if (req.body.city) req.body.city = toTitleCase(req.body.city);
+    if (req.body.area) req.body.area = toTitleCase(req.body.area);
 
     // ✅ update other fields safely (don’t overwrite images)
     const { existingImages: ex, images, ...rest } = req.body;

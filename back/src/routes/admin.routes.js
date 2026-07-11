@@ -5,12 +5,16 @@ import {
   getAllPGsAdmin,
   updatePGAdmin,
   deletePGAdmin,
+  getAllInquiriesAdmin,
 } from "../controllers/adminPG.controller.js";
 
 const router = express.Router();
 
 // ✅ GET all PGs
 router.get("/pgs", auth, adminOnly, getAllPGsAdmin);
+
+// ✅ GET all Inquiries
+router.get("/inquiries", auth, adminOnly, getAllInquiriesAdmin);
 
 // ✅ PATCH active/verified
 router.patch("/pgs/:id", auth, adminOnly, updatePGAdmin);

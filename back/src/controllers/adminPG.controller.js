@@ -1,4 +1,5 @@
 import PG from "../models/PG.js";
+import Inquiry from "../models/Inquiry.js";
 import cloudinary from "../lib/cloudinary.js";
 
 /* ---------- GET ALL PGs (ADMIN) ---------- */
@@ -70,5 +71,26 @@ export const deletePGAdmin = async (req, res) => {
   } catch (err) {
     console.error("ADMIN DELETE PG ERROR:", err);
     res.status(500).json({ message: "Failed to delete PG" });
+  }
+};
+
+/* ---------- GET ALL INQUIRIES (ADMIN) ---------- */
+export const getAllInquiriesAdmin = async (req, res) => {
+  try {
+    const inquiries = await Inquiry.find()
+      .populate({
+        path: "pgId",
+        select: "name area city ownerId",
+        populate: {
+          path: "ownerId",
+          select: "name email phone",
+        },
+      })
+      .sort({ createdAt: -1 });
+
+    res.json(inquiries);
+  } catch (err) {
+    console.error("ADMIN GET INQUIRIES ERROR:", err);
+    res.status(500).json({ message: "Failed to fetch inquiries" });
   }
 };

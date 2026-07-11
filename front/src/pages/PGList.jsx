@@ -7,6 +7,16 @@ import { apiFetch } from "../utils/api";
 
 const normalize = (str = "") => String(str).toLowerCase().trim();
 
+const toTitleCase = (str = "") => {
+  if (!str) return "";
+  return String(str)
+    .trim()
+    .toLowerCase()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 export default function PGList() {
   const { query } = useSearch();
 
@@ -38,8 +48,15 @@ export default function PGList() {
   }, []);
 
   // ✅ suggestions from backend data
-  const cities = useMemo(() => [...new Set(pgs.map((pg) => pg.city))], [pgs]);
-  const areas = useMemo(() => [...new Set(pgs.map((pg) => pg.area))], [pgs]);
+  const cities = useMemo(() => {
+    const raw = pgs.map((pg) => toTitleCase(pg.city)).filter(Boolean);
+    return [...new Set(raw)];
+  }, [pgs]);
+
+  const areas = useMemo(() => {
+    const raw = pgs.map((pg) => toTitleCase(pg.area)).filter(Boolean);
+    return [...new Set(raw)];
+  }, [pgs]);
 
   // ✅ filter backend PGs
   const filteredPGs = useMemo(() => {

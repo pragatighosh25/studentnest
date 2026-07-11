@@ -4,24 +4,57 @@ import PageWrapper from "../components/PageWrapper";
 import { Verified } from "lucide-react";
 import { apiFetch } from "../utils/api";
 import ImageCarousel from "../components/ImageCarousel";
-
+import InquiryDetailsModal from "../components/InquiryDetailsModal";
 
 export default function PGDetail() {
   const { id } = useParams();
 
   const [pg, setPg] = useState(null);
   const [loading, setLoading] = useState(true);
-  const logInquiry = async (type) => {
-  try {
-    await apiFetch(`/pgs/${id}/inquiry`, {
-      method: "POST",
-      body: JSON.stringify({ type }), // optional
-    });
-  } catch (err) {
-    console.error("Inquiry log failed:", err.message);
-  }
-};
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState("call");
 
+  const logInquiry = async (type, details) => {
+    try {
+      await apiFetch(`/pgs/${id}/inquiry`, {
+        method: "POST",
+        body: JSON.stringify({ type, ...details }),
+      });
+    } catch (err) {
+      console.error("Inquiry log failed:", err.message);
+    }
+  };
+
+  const handleContactClick = (type, e) => {
+    const savedDetails = localStorage.getItem("student_inquiry_details");
+    if (savedDetails) {
+      try {
+        const details = JSON.parse(savedDetails);
+        logInquiry(type, details);
+        return; // Proceed with default link behavior
+      } catch (err) {
+        console.error("Error parsing saved details:", err);
+      }
+    }
+
+    // Prefill details from user context if logged in, but still require submission/verification
+    e.preventDefault();
+    setModalType(type);
+    setShowModal(true);
+  };
+
+  const handleModalSubmit = async (details) => {
+    setShowModal(false);
+    localStorage.setItem("student_inquiry_details", JSON.stringify(details));
+    await logInquiry(modalType, details);
+
+    // Manually trigger the action
+    if (modalType === "call") {
+      window.location.href = `tel:${pg.phone}`;
+    } else {
+      window.open(`https://wa.me/91${pg.phone}`, "_blank", "noreferrer");
+    }
+  };
 
   useEffect(() => {
     const fetchPG = async () => {
@@ -130,23 +163,23 @@ export default function PGDetail() {
           {/* CTA */}
           <div className="mt-10 grid gap-4 sm:grid-cols-2">
             <a
-  href={`tel:${pg.phone}`}
-  onClick={() => logInquiry("call")}
-  className="w-full text-center py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-medium transition"
->
-  Call Owner
-</a>
+              href={`tel:${pg.phone}`}
+              onClick={(e) => handleContactClick("call", e)}
+              className="w-full text-center py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-medium transition"
+            >
+              Call Owner
+            </a>
 
 
             <a
-  href={`https://wa.me/91${pg.phone}`}
-  target="_blank"
-  rel="noreferrer"
-  onClick={() => logInquiry("whatsapp")}
-  className="w-full text-center py-3 rounded-xl border border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 font-medium transition"
->
-  WhatsApp Owner
-</a>
+              href={`https://wa.me/91${pg.phone}`}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => handleContactClick("whatsapp", e)}
+              className="w-full text-center py-3 rounded-xl border border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 font-medium transition"
+            >
+              WhatsApp Owner
+            </a>
 
           </div>
         </div>
@@ -155,12 +188,20 @@ export default function PGDetail() {
         <div className="fixed bottom-0 left-0 right-0 sm:hidden bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-800 p-4">
           <a
             href={`tel:${pg.phone}`}
+            onClick={(e) => handleContactClick("call", e)}
             className="block w-full text-center py-3 rounded-xl bg-green-500 text-white font-medium"
           >
             Call Owner
           </a>
         </div>
       </section>
+
+      <InquiryDetailsModal
+        open={showModal}
+        type={modalType}
+        onClose={() => setShowModal(false)}
+        onSubmit={handleModalSubmit}
+      />
     </PageWrapper>
   );
 }

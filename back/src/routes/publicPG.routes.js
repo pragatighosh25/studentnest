@@ -1,5 +1,6 @@
 import express from "express";
 import PG from "../models/PG.js";
+import Inquiry from "../models/Inquiry.js";
 
 const router = express.Router();
 
@@ -29,6 +30,22 @@ router.get("/pgs/:id", async (req, res) => {
 // ✅ Student inquiry log (Call / WhatsApp clicked)
 router.post("/pgs/:id/inquiry", async (req, res) => {
   try {
+    const { name, email, phone, type } = req.body;
+
+    if (!name || !email || !phone) {
+      return res.status(400).json({ message: "Student contact details (name, email, phone) are required" });
+    }
+
+    // 1. Create Inquiry document
+    const inquiry = await Inquiry.create({
+      pgId: req.params.id,
+      studentName: name,
+      studentEmail: email,
+      studentPhone: phone,
+      type: type || "call",
+    });
+
+    // 2. Increment PG inquiry count
     const pg = await PG.findByIdAndUpdate(
       req.params.id,
       { $inc: { inquiryCount: 1 } },
@@ -39,7 +56,7 @@ router.post("/pgs/:id/inquiry", async (req, res) => {
       return res.status(404).json({ message: "PG not found" });
     }
 
-    res.json({ message: "Inquiry logged", inquiryCount: pg.inquiryCount });
+    res.json({ message: "Inquiry logged", inquiryCount: pg.inquiryCount, inquiry });
   } catch (err) {
     console.error("INQUIRY LOG ERROR:", err);
     res.status(500).json({ message: "Failed to log inquiry" });
