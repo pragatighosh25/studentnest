@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /pgs
+Allow: /pg/
+Disallow: /owner/dashboard
+Disallow: /admin/dashboard
+
+Sitemap: https://www.studentnests.in/sitemap.xml
