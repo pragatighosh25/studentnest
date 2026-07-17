@@ -19,7 +19,7 @@ app.use(
       "http://localhost:3000",
       "https://studentnest-nine.vercel.app",
       "https://www.studentnests.in",
-      "https://www.studentnests.in",
+      "https://studentnests.in",
     ],
     credentials: true,
   })
